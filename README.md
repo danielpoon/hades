@@ -14,6 +14,7 @@ For detailed information, see the following documentation files:
 - **[Docker Management Guide](doc/README-docker.md)** - Quick reference for Docker commands and container management
 - **[Test Suite Documentation](doc/README-test-suite.md)** - Guide to running and understanding the automated test cases
 - **[Git Workflow Guide](doc/README-git.md)** - Step-by-step instructions for Git operations in Cursor IDE
+- **[Python 3.12 Setup Guide](doc/README-python.md)** - Installing Python 3.12, managing the venv, and updating dependencies
 
 ## Quick Start
 
@@ -23,5 +24,3 @@ For detailed information, see the following documentation files:
 4. Use `./start.sh status` to verify everything is working
 
 For more details, see the [start.sh Script Guide](doc/README-start.md).
-
-
