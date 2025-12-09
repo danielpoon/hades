@@ -126,6 +126,33 @@ is_running() {
   compose ps --status running "${SERVICE}" | grep -q "${SERVICE}"
 }
 
+wait_for_health() {
+  # Wait for container healthcheck to report healthy
+  local cid status
+  cid="$(compose ps -q "${SERVICE}")"
+  if [[ -z "${cid}" ]]; then
+    echo "Container ID not found for service ${SERVICE}" >&2
+    return 1
+  fi
+
+  local attempts=15
+  local delay=2
+  for ((i = 1; i <= attempts; i++)); do
+    status="$(docker inspect -f '{{.State.Health.Status}}' "${cid}" 2>/dev/null || true)"
+    if [[ "${status}" == "healthy" ]]; then
+      return 0
+    fi
+    if [[ "${status}" == "unhealthy" ]]; then
+      echo "Container healthcheck reports unhealthy." >&2
+      return 1
+    fi
+    sleep "${delay}"
+  done
+
+  echo "Container did not become healthy after $((attempts * delay))s." >&2
+  return 1
+}
+
 start_service() {
   require_docker
   wait_for_key
@@ -144,8 +171,13 @@ start_service() {
     echo "Postgres is already running."
   else
     compose up -d "${SERVICE}"
-    # Wait a bit for container to be ready
-    sleep 3
+  fi
+
+  # Wait for health before connection test
+  echo "Waiting for Postgres container health..."
+  if ! wait_for_health; then
+    echo "Container is not healthy; skipping connection test." >&2
+    return
   fi
   
   # Test connection if container is running
@@ -300,14 +332,15 @@ rebuild_service() {
   install_requirements
   wait_for_key
 
-  echo "This will stop the service and remove containers, images, and volumes for Postgres."
+  echo "This will stop the service and remove containers/images for Postgres (data volume preserved)."
   read -r -p "Type YES to continue: " confirm
   if [[ "${confirm}" != "YES" ]]; then
     echo "Rebuild aborted."
     return
   fi
 
-  compose down --rmi all --volumes || true
+  # Preserve the named volume; omit --volumes to keep data
+  compose down --rmi all || true
   compose pull "${SERVICE}"
   compose up -d --force-recreate "${SERVICE}"
 }

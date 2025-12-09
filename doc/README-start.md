@@ -99,24 +99,24 @@ Testing connection...
 
 ### `rebuild`
 
-Completely rebuilds the Postgres container and environment.
+Completely rebuilds the Postgres container and environment (data volume preserved).
 
 **What it does:**
 1. Verifies Python 3.12 is installed
 2. Creates or verifies the virtual environment
 3. Installs/updates Python dependencies
 4. Prompts for confirmation (requires typing "YES")
-5. Removes existing containers, images, and volumes
+5. Stops and removes existing containers and images (keeps the data volume)
 6. Pulls the latest Postgres image
-7. Creates a fresh container
+7. Creates a fresh container (reuses existing data volume)
 
 **Interactive prompts:**
 - Press any key after Python version verification
 - Press any key after virtual environment setup
 - Press any key after dependency installation
-- Type "YES" to confirm rebuild (destructive operation)
+- Type "YES" to confirm rebuild
 
-**Warning:** This operation will **delete all database data** stored in the Docker volume.
+**Data persistence:** The named volume is preserved; database data is kept. To fully wipe data, manually remove the volume: `docker compose down --volumes` (or use `docker volume rm hades-db_data`).
 
 **Example:**
 ```bash
